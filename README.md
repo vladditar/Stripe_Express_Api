@@ -6,6 +6,7 @@
 ### 2. Create a file with name '.env' in the root folder and add environment variables:
 `PORT={****}`
 `STRIPE_SECRET_KEY='****'`
+`STRIPE_WEBHOOK_SECRET='****'`
 
 ### 3. Run app in background
 `npm run dev` = `nodemon server.js`
