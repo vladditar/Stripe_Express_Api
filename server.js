@@ -8,9 +8,19 @@ require('dotenv').config()
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(
+  express.json({
+    // We need the raw body to verify webhook signatures.
+    // Let's compute it only when hitting the Stripe webhook endpoint.
+    verify: function (req, res, buf) {
+      if (req.originalUrl.startsWith('/webhook')) {
+        req.rawBody = buf.toString();
+      }
+    },
+  })
+);
 app.use(cors({
-  origin: "*"
+  origin: ['http://localhost:4200', 'https://checkout.stripe.com']
 }))
 
 const PORT = process.env.PORT;

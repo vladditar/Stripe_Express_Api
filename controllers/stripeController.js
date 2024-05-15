@@ -27,9 +27,7 @@ const createCheckoutSession = async (req, res) => {
     success_url: `http://localhost:4200/#/cart?sessioniD={CHECKOUT_SESSION_ID}`,
     cancel_url: `http://localhost:4200/#/error`,
   });
-  console.log(session.id);
-  console.log(req.body.price); // Log the price here if you need it
-  res.redirect(303, session.url);
+  res.json(session.url);
 };
 
 module.exports = {createCheckoutSession, getCheckoutSession}
