@@ -11,6 +11,17 @@
 ### 3. Run app in background
 `npm run dev` = `nodemon server.js`
 
+# Stripe CLI
+
+### Install Stripe CLI
+`sudo brew install stripe/stripe-cli/stripe;`
+
+### Listen to Stripe events
+`stripe listen --forward-to <webhook endpoint> (ex: localhost:8081/webhook)`
+
+### Enable event trigger
+`stripe trigger <event name> (ex: checkout.session.completed)`
+
 # Dependencies
 `npm install express`
 `npm install cors`
