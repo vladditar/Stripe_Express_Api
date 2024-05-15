@@ -1,5 +1,6 @@
 require('dotenv').config()
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const {calculatePrice} = require('../utils')
 
 // Fetch the Checkout Session to display the JSON result on the success page
 const getCheckoutSession = async (req, res) => {
@@ -15,19 +16,38 @@ const getCheckoutSession = async (req, res) => {
 
 
 const createCheckoutSession = async (req, res) => {
-  const session = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        price: 'price_1PGMyQRxqgGsYbx99P3pDyNN',
-        quantity: 1,
+  console.log(req.body)
+  const price = calculatePrice(req.body.color)
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Custom Sunglasses'
+            },
+            unit_amount: price
+          },
+          quantity: req.body.quantity,
+        },
+      ],
+      mode: 'payment',
+      invoice_creation: {
+        enabled: true,
       },
-    ],
-    mode: 'payment',
-    success_url: `http://localhost:4200/#/cart?sessioniD={CHECKOUT_SESSION_ID}`,
-    cancel_url: `http://localhost:4200/#/error`,
-  });
-  res.json(session.url);
+      payment_intent_data: {
+        receipt_email: 'vlad@ditar.io'
+      },
+      success_url: `http://localhost:4200/#/cart?sessioniD={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:4200/#/error`,
+    });
+    res.json(session.url);
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).send({ error: 'Unable to create checkout session.' });
+  }
 };
 
 module.exports = {createCheckoutSession, getCheckoutSession}
