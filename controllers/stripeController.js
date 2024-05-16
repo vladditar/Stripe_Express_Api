@@ -1,6 +1,6 @@
 require('dotenv').config()
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const {calculatePrice} = require('../utils')
+const {calculateItemPrice} = require('../utils')
 
 // Fetch the Checkout Session to display the JSON result on the success page
 const getCheckoutSession = async (req, res) => {
@@ -16,24 +16,41 @@ const getCheckoutSession = async (req, res) => {
 
 
 const createCheckoutSession = async (req, res) => {
-  console.log(req.body)
-  const price = calculatePrice(req.body.color)
+  const cartItems = req.body;
+
+  const stripeLineItems = cartItems.map((item) => {
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Glasses ' + item.shape,
+          },
+          unit_amount: calculateItemPrice(item),
+          // Important property. Tax can be rather 'exclusive', 'inclusive' or 'unspecified'. By default, it's 'inclusive'.
+          tax_behavior: 'exclusive'
+        },
+        quantity: 1,
+      }
+    });
 
   try {
     const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: 'Custom Sunglasses'
-            },
-            unit_amount: price
-          },
-          quantity: req.body.quantity,
-        },
+      submit_type: "pay",
+      // payment_method_types options: acss_debit, affirm, afterpay_clearpay, alipay, au_becs_debit, bacs_debit, bancontact, blik, boleto, cashapp, customer_balance, eps, fpx, giropay, grabpay, ideal, klarna, konbini, link, oxxo, p24, paynow, paypal, pix, promptpay, sepa_debit, sofort, swish, us_bank_account, wechat_pay, revolut_pay, mobilepay, zip, or amazon_pay',
+      payment_method_types: ['card', 'bancontact', 'paypal'],
+      billing_address_collection: 'auto',
+      shipping_options: [
+        {shipping_rate: 'shr_1PH3NRRxqgGsYbx9XgMe76RJ' },
+        {shipping_rate: 'shr_1PH3OFRxqgGsYbx9LzSFuzsl' }
       ],
+      line_items: stripeLineItems,
+      automatic_tax: {
+        enabled: true
+      },
       mode: 'payment',
+      tax_id_collection: {
+        enabled: true,
+      },
       invoice_creation: {
         enabled: true,
       },
@@ -43,7 +60,8 @@ const createCheckoutSession = async (req, res) => {
       success_url: `http://localhost:4200/#/cart?sessioniD={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:4200/#/error`,
     });
-    res.json(session.url);
+
+    res.json(session);
   } catch (error) {
     console.error('Error creating checkout session:', error);
     res.status(500).send({ error: 'Unable to create checkout session.' });

@@ -22,17 +22,21 @@ const createAndSendInvoice = async (invoiceItemId) => {
     console.error('Error creating or sending invoice:', error);
   }
 };
-const calculatePrice = (color) => {
-  switch (color) {
-    case 'Blue':
-      return 1000;
-    case 'Red':
-      return 2000;
-    case 'Black':
-      return 3000;
+const calculateItemPrice = (item) => {
+  switch (item.shape) {
+    case 'FSA2014':
+      return centsToEur(10);
+    case 'FSA2010':
+      return centsToEur(20);
+    case 'FSA2013':
+      return centsToEur(30);
     default:
-      return 100;
+      return centsToEur(1);
   }
 };
 
-module.exports = { createAndSendInvoice, calculatePrice };
+const centsToEur = (price) => {
+  return price * 100;
+}
+
+module.exports = { createAndSendInvoice, calculateItemPrice };
